@@ -4,8 +4,15 @@ from sklearn.feature_extraction.text import CountVectorizer
 import xgboost as xgb
 
 
-df = pd.read_table('train.csv', header=0, index_col=0, sep=',')
+train = pd.read_table('train.csv', header=0, index_col=0, sep=',')
+y = train['is_duplicate']
+train.drop(['id', 'qid1', 'qid2', 'is_duplicate'],
+        axis=1, inplace=True)
+
 test = pd.read_table('/Users/Leslie/GitHub/QuoraPairs/test.csv', header=0, index_col=None, sep=',')
+test.drop('test_id',
+          axis=1, inplace=True)
+df = pd.concat([train, test])
 
 df.question1=df.question1.str.lower()
 df.question2=df.question2.str.lower()
@@ -72,7 +79,6 @@ abbr_dict={
 
 df.replace(abbr_dict,regex=True,inplace=True)
 df = df.fillna("")
-test = test.fillna("")
 
 df1 = df[['qid1', 'question1']]
 df2 = df[['qid2', 'question2']]
