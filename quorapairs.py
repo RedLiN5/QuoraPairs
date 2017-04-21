@@ -7,6 +7,11 @@ import xgboost as xgb
 df = pd.read_table('train.csv', header=0, index_col=0, sep=',')
 test = pd.read_table('/Users/Leslie/GitHub/QuoraPairs/test.csv', header=0, index_col=None, sep=',')
 
+df.question1=df.question1.str.lower()
+df.question2=df.question2.str.lower()
+df.question1=df.question1.astype(str)
+df.question2=df.question2.astype(str)
+
 df = df.fillna("")
 test = test.fillna("")
 
