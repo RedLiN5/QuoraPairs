@@ -1,13 +1,14 @@
 import pandas as pd
 import numpy as np
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 import xgboost as xgb
 
 def run(run_test = False):
     train = pd.read_table('train.csv', header=0, index_col=0, sep=',')
     y = train['is_duplicate']
     train.drop(['id', 'qid1', 'qid2', 'is_duplicate'],
-            axis=1, inplace=True)
+               axis=1, inplace=True)
+    train_length = train.shape[0]
 
     test = pd.read_table('/Users/Leslie/GitHub/QuoraPairs/test.csv', header=0, index_col=None, sep=',')
     test.drop('test_id',
@@ -15,7 +16,9 @@ def run(run_test = False):
 
     if run_test:
         train = train[:10000]
+        train_length = train.shape[0]
         test = test[:10000]
+
     df = pd.concat([train, test])
 
     df.question1=df.question1.str.lower()
@@ -84,9 +87,14 @@ def run(run_test = False):
     df.replace(abbr_dict,regex=True,inplace=True)
     df = df.fillna("")
 
-    df1 = df[['qid1', 'question1']]
-    df2 = df[['qid2', 'question2']]
+    df1 = df['question1']
+    df2 = df['question2']
 
+    vectorizer = TfidfVectorizer(max_features = 1000)
+    df1_vector = vectorizer.fit_transform(df1)
+    df2_vector = vectorizer.fit_transform(df2)
+    X = np.abs(df1_vector - df2_vector)
+    print(X[:20], X.shape)
 
 if __name__ == '__main__':
     run(run_test=True)
