@@ -16,6 +16,7 @@ def run(run_test = False):
 
     if run_test:
         train = train[:10000]
+        y = y[:10000]
         train_length = train.shape[0]
         test = test[:10000]
 
@@ -100,8 +101,13 @@ def run(run_test = False):
     X_train = X[:train_length][:train_size]
     X_valid = X[train_length:][train_size:]
     y_train = y[:train_size]
+    y_valid = y[train_size:]
 
-
+    print(X_train.shape, y_train.shape,
+          X_valid.shape, y_valid.shape)
+    clf = xgb.XGBClassifier()
+    clf.fit(X_train, y_train)
+    print('Accuracy score of xgb:', clf.score(X_valid, y_valid))
 
 if __name__ == '__main__':
     run(run_test=True)
