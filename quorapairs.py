@@ -6,7 +6,7 @@ import xgboost as xgb
 def run(run_test = False):
     train = pd.read_table('train.csv', header=0, index_col=0, sep=',')
     y = train['is_duplicate']
-    train.drop(['id', 'qid1', 'qid2', 'is_duplicate'],
+    train.drop(['qid1', 'qid2', 'is_duplicate'],
                axis=1, inplace=True)
     train_length = train.shape[0]
 
@@ -94,7 +94,14 @@ def run(run_test = False):
     df1_vector = vectorizer.fit_transform(df1)
     df2_vector = vectorizer.fit_transform(df2)
     X = np.abs(df1_vector - df2_vector)
-    print(X[:20], X.shape)
+
+    train_size = int(np.round(.7*train_length))
+
+    X_train = X[:train_length][:train_size]
+    X_valid = X[train_length:][train_size:]
+    y_train = y[:train_size]
+
+
 
 if __name__ == '__main__':
     run(run_test=True)
