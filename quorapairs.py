@@ -105,9 +105,6 @@ def run(run_test = False, output=False):
     y_valid = y[train_size:]
     X_test = X[train_length:]
 
-    print(X_train.shape, y_train.shape,
-          X_valid.shape, y_valid.shape,
-          X_test.shape)
     clf = xgb.XGBClassifier()
     clf.fit(X_train, y_train)
     print('Accuracy score of xgb:', clf.score(X_valid, y_valid))
@@ -116,7 +113,6 @@ def run(run_test = False, output=False):
         df_output = pd.DataFrame({'test_id': test_id,
                                   'is_duplicate': None})
         y_pred = clf.predict(X_test)
-        print(y_pred[:10])
         pred_length = len(y_pred)
         df_output.ix[:pred_length-1, 'is_duplicate'] = y_pred
         df_output.to_csv('submission.csv',
