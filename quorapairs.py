@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import xgboost as xgb
 
-def run(run_test = False):
+def run(run_test = False, output=False):
     train = pd.read_table('train.csv', header=0, index_col=0, sep=',')
     y = train['is_duplicate']
     train.drop(['qid1', 'qid2', 'is_duplicate'],
@@ -11,6 +11,7 @@ def run(run_test = False):
     train_length = train.shape[0]
 
     test = pd.read_table('/Users/Leslie/GitHub/QuoraPairs/test.csv', header=0, index_col=None, sep=',')
+    test_id = test['test_id']
     test.drop('test_id',
               axis=1, inplace=True)
 
@@ -102,13 +103,26 @@ def run(run_test = False):
     X_valid = X[train_length:][train_size:]
     y_train = y[:train_size]
     y_valid = y[train_size:]
+    X_test = X[train_length:]
 
     print(X_train.shape, y_train.shape,
-          X_valid.shape, y_valid.shape)
+          X_valid.shape, y_valid.shape,
+          X_test.shape)
     clf = xgb.XGBClassifier()
     clf.fit(X_train, y_train)
     print('Accuracy score of xgb:', clf.score(X_valid, y_valid))
 
+    if output:
+        df_output = pd.DataFrame({'test_id': test_id,
+                                  'is_duplicate': None})
+        y_pred = clf.predict(X_test)
+        print(y_pred[:10])
+        pred_length = len(y_pred)
+        df_output.ix[:pred_length-1, 'is_duplicate'] = y_pred
+        df_output.to_csv('submission.csv',
+                         index=False)
+
+
 if __name__ == '__main__':
-    run(run_test=True)
+    run(run_test=True, output=True)
 
