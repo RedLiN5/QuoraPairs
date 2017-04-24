@@ -14,6 +14,7 @@ def run(run_test = False, output=False):
     test_id = test['test_id']
     test.drop('test_id',
               axis=1, inplace=True)
+    print('test:', test.shape)
 
     if run_test:
         train = train[:10000]
@@ -100,7 +101,7 @@ def run(run_test = False, output=False):
     train_size = int(np.round(.7*train_length))
 
     X_train = X[:train_length][:train_size]
-    X_valid = X[train_length:][train_size:]
+    X_valid = X[:train_length][train_size:]
     y_train = y[:train_size]
     y_valid = y[train_size:]
     X_test = X[train_length:]
@@ -112,6 +113,7 @@ def run(run_test = False, output=False):
     if output:
         df_output = pd.DataFrame({'test_id': test_id,
                                   'is_duplicate': None})
+        df_output = df_output[['test_id', 'is_duplicate']]
         y_pred = clf.predict(X_test)
         pred_length = len(y_pred)
         df_output.ix[:pred_length-1, 'is_duplicate'] = y_pred
@@ -120,5 +122,5 @@ def run(run_test = False, output=False):
 
 
 if __name__ == '__main__':
-    run(run_test=True, output=True)
+    run(run_test=False, output=True)
 
