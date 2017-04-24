@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import xgboost as xgb
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.naive_bayes import BernoulliNB
 from sklearn.metrics import roc_auc_score
 
 def run(run_test = False, output=False):
@@ -15,7 +17,6 @@ def run(run_test = False, output=False):
     test_id = test['test_id']
     test.drop('test_id',
               axis=1, inplace=True)
-    print('test:', test.shape)
 
     if run_test:
         train = train[:10000]
@@ -94,7 +95,7 @@ def run(run_test = False, output=False):
     df1 = df['question1']
     df2 = df['question2']
 
-    vectorizer = TfidfVectorizer(max_features = 1000)
+    vectorizer = TfidfVectorizer(max_features = 2000)
     df1_vector = vectorizer.fit_transform(df1)
     df2_vector = vectorizer.fit_transform(df2)
     X = np.abs(df1_vector - df2_vector)
@@ -113,11 +114,17 @@ def run(run_test = False, output=False):
     print('AUC of xgb:', roc_auc_score(y_valid,
                                        valid_proba.T[1]))
 
+    nb = BernoulliNB()
+    nb.fit(X_train, y_train)
+    valid_proba = nb.predict_proba(X_valid)
+    print('AUC of NB:', roc_auc_score(y_valid,
+                                      valid_proba.T[1]))
+
     if output:
         df_output = pd.DataFrame({'test_id': test_id,
                                   'is_duplicate': None})
         df_output = df_output[['test_id', 'is_duplicate']]
-        pred_proba = clf.predict_proba(X_test).T[1]
+        pred_proba = nb.predict_proba(X_test).T[1]
         pred_length = len(pred_proba)
         df_output.ix[:pred_length-1, 'is_duplicate'] = pred_proba
         df_output.to_csv('submission.csv',
@@ -125,5 +132,6 @@ def run(run_test = False, output=False):
 
 
 if __name__ == '__main__':
-    run(run_test=False, output=True)
+    run(run_test=False,
+        output=True)
 
