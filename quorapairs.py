@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import xgboost as xgb
+from sklearn.metrics import roc_auc_score
 
 def run(run_test = False, output=False):
     train = pd.read_table('train.csv', header=0, index_col=0, sep=',')
@@ -108,15 +109,17 @@ def run(run_test = False, output=False):
 
     clf = xgb.XGBClassifier()
     clf.fit(X_train, y_train)
-    print('Accuracy score of xgb:', clf.score(X_valid, y_valid))
+    valid_proba = clf.predict_proba(X_valid)
+    print('AUC of xgb:', roc_auc_score(y_valid,
+                                       valid_proba.T[1]))
 
     if output:
         df_output = pd.DataFrame({'test_id': test_id,
                                   'is_duplicate': None})
         df_output = df_output[['test_id', 'is_duplicate']]
-        y_pred = clf.predict(X_test)
-        pred_length = len(y_pred)
-        df_output.ix[:pred_length-1, 'is_duplicate'] = y_pred
+        pred_proba = clf.predict_proba(X_test).T[1]
+        pred_length = len(pred_proba)
+        df_output.ix[:pred_length-1, 'is_duplicate'] = pred_proba
         df_output.to_csv('submission.csv',
                          index=False)
 
