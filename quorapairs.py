@@ -3,9 +3,8 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 import xgboost as xgb
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.naive_bayes import BernoulliNB
 from sklearn.metrics import roc_auc_score
+import time
 
 def run(run_test = False, output=False):
     train = pd.read_table('train.csv', header=0, index_col=0, sep=',')
@@ -27,10 +26,10 @@ def run(run_test = False, output=False):
 
     df = pd.concat([train, test])
 
-    df.question1=df.question1.str.lower()
-    df.question2=df.question2.str.lower()
-    df.question1=df.question1.astype(str)
-    df.question2=df.question2.astype(str)
+    df.question1 = df.question1.str.lower()
+    df.question2 = df.question2.str.lower()
+    df.question1 = df.question1.astype(str)
+    df.question2 = df.question2.astype(str)
 
     abbr_dict={
         "what's":"what is",
@@ -97,6 +96,15 @@ def run(run_test = False, output=False):
     df2 = df['question2']
     df_length = df1.shape[0]
 
+    def normalized_word_share(row):
+        w1 = set(map(lambda word: word.lower().strip(),
+                     row['question1'].split(" ")))
+        w2 = set(map(lambda word: word.lower().strip(),
+                     row['question2'].split(" ")))
+        return 1.0 * len(w1 & w2) / (len(w1) + len(w2))
+
+    df_word_share_ratio = df.apply(normalized_word_share, axis=1)
+
     vectorizer = TfidfVectorizer(max_features = 5000)
     df_q1q2 = pd.concat([df1, df2])
     X_q1q2 = vectorizer.fit_transform(df_q1q2)
@@ -105,6 +113,8 @@ def run(run_test = False, output=False):
     X_q1 = X_q1q2[:df_length]
     X_q2 = X_q1q2[df_length:]
     X = X_q1 - X_q2
+    X = np.row_stack((X.toarray().T,
+                      df_word_share_ratio.values)).T
     print('X Size:', X.shape)
 
     train_size = int(np.round(.7*train_length))
@@ -124,7 +134,6 @@ def run(run_test = False, output=False):
     valid_proba = clf.predict_proba(X_valid)
     print('AUC of xgb:', roc_auc_score(y_valid,
                                        valid_proba.T[1]))
-    
 
     if output:
         df_output = pd.DataFrame({'test_id': test_id,
@@ -138,6 +147,8 @@ def run(run_test = False, output=False):
 
 
 if __name__ == '__main__':
+    start = time.time()
     run(run_test=False,
         output=True)
+    print('Running time: {0:.2f}s'.format(time.time()-start))
 
