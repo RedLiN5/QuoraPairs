@@ -115,7 +115,7 @@ def run(run_test = False, output=False):
     X = X_q1 - X_q2
     X = np.row_stack((X.toarray().T,
                       df_word_share_ratio.values)).T
-    print('X Size:', X.shape)
+    # print('X Size:', X.shape)
 
     train_size = int(np.round(.7*train_length))
 
@@ -124,10 +124,10 @@ def run(run_test = False, output=False):
     y_train = y[:train_size]
     y_valid = y[train_size:]
     X_test = X[train_length:]
-    print('X_train:', X_train.shape,
-          'X_valid:', X_valid.shape,
-          'y_train:', y_train.shape,
-          'y_valid:', y_valid.shape)
+    # print('X_train:', X_train.shape,
+    #       'X_valid:', X_valid.shape,
+    #       'y_train:', y_train.shape,
+    #       'y_valid:', y_valid.shape)
 
     clf = xgb.XGBClassifier()
     clf.fit(X_train, y_train)
