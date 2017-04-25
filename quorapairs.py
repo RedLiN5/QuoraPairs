@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
 import xgboost as xgb
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.naive_bayes import BernoulliNB
@@ -19,8 +20,8 @@ def run(run_test = False, output=False):
               axis=1, inplace=True)
 
     if run_test:
-        train = train[:10000]
-        y = y[:10000]
+        train = train[:50000]
+        y = y[:50000]
         train_length = train.shape[0]
         test = test[:10000]
 
@@ -94,11 +95,17 @@ def run(run_test = False, output=False):
 
     df1 = df['question1']
     df2 = df['question2']
+    df_length = df1.shape[0]
 
-    vectorizer = TfidfVectorizer(max_features = 2000)
-    df1_vector = vectorizer.fit_transform(df1)
-    df2_vector = vectorizer.fit_transform(df2)
-    X = np.abs(df1_vector - df2_vector)
+    vectorizer = TfidfVectorizer(max_features = 5000)
+    df_q1q2 = pd.concat([df1, df2])
+    X_q1q2 = vectorizer.fit_transform(df_q1q2)
+    transformer = TfidfTransformer(smooth_idf=False)
+    X_q1q2 = transformer.fit_transform(X_q1q2)
+    X_q1 = X_q1q2[:df_length]
+    X_q2 = X_q1q2[df_length:]
+    X = X_q1 - X_q2
+    print('X Size:', X.shape)
 
     train_size = int(np.round(.7*train_length))
 
@@ -107,6 +114,10 @@ def run(run_test = False, output=False):
     y_train = y[:train_size]
     y_valid = y[train_size:]
     X_test = X[train_length:]
+    print('X_train:', X_train.shape,
+          'X_valid:', X_valid.shape,
+          'y_train:', y_train.shape,
+          'y_valid:', y_valid.shape)
 
     clf = xgb.XGBClassifier()
     clf.fit(X_train, y_train)
