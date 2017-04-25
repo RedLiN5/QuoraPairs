@@ -124,18 +124,13 @@ def run(run_test = False, output=False):
     valid_proba = clf.predict_proba(X_valid)
     print('AUC of xgb:', roc_auc_score(y_valid,
                                        valid_proba.T[1]))
-
-    nb = BernoulliNB()
-    nb.fit(X_train, y_train)
-    valid_proba = nb.predict_proba(X_valid)
-    print('AUC of NB:', roc_auc_score(y_valid,
-                                      valid_proba.T[1]))
+    
 
     if output:
         df_output = pd.DataFrame({'test_id': test_id,
                                   'is_duplicate': None})
         df_output = df_output[['test_id', 'is_duplicate']]
-        pred_proba = nb.predict_proba(X_test).T[1]
+        pred_proba = clf.predict_proba(X_test).T[1]
         pred_length = len(pred_proba)
         df_output.ix[:pred_length-1, 'is_duplicate'] = pred_proba
         df_output.to_csv('submission.csv',
