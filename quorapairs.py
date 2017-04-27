@@ -135,6 +135,22 @@ def run(run_test = False, output=False):
     print('AUC of xgb:', roc_auc_score(y_valid,
                                        valid_proba.T[1]))
 
+    # -- * -- * -- * -- * -- * -- * -- * -- * -- * --
+
+    # Set our parameters for xgboost
+    params = {}
+    params['objective'] = 'binary:logistic'
+    params['eval_metric'] = 'logloss'
+    params['eta'] = 0.02
+    params['max_depth'] = 4
+
+    d_train = xgb.DMatrix(x_train, label=y_train)
+    d_valid = xgb.DMatrix(x_valid, label=y_valid)
+
+    watchlist = [(d_train, 'train'), (d_valid, 'valid')]
+
+    bst = xgb.train(params, d_train, 400, watchlist, early_stopping_rounds=50, verbose_eval=10)
+
     if output:
         df_output = pd.DataFrame({'test_id': test_id,
                                   'is_duplicate': None})
